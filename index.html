@@ -1,0 +1,2989 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Финансовые итоги дня</title>
+  <meta name="description" content="Финансовый дашборд: ключевые финансово-экономические показатели компании за выбранный день.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiIgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIj4KICA8cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI4IiBmaWxsPSIjMkU4QjU3Ii8+CiAgPHBhdGggZD0iTTguNSAyM3YtNU0xMy41IDIzdi05TTE4LjUgMjN2LTYuNU0yMy41IDIzVjkiIHN0cm9rZT0iI0ZGRkZGRiIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiLz4KPC9zdmc+">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+  <style>/* css/variables.css */
+/* Палитра, отступы, радиусы, шрифты. Все цвета дашборда берутся только отсюда. */
+:root {
+  /* Базовая светло-зелёная палитра (раздел 7.2 ТЗ) */
+  --bg-page: #F4F9F5;
+  --bg-card: #FFFFFF;
+  --accent: #2E8B57;
+  --accent-dark: #226B43;
+  --accent-light: #DDF0E3;
+  --accent-secondary: #7BC59A;
+  --text-primary: #1F2D24;
+  --text-secondary: #5F7366;
+  --border: #D6E5DA;
+  --positive: #22A06B;
+  --negative: #D64545;
+  --warning: #E0A100;
+
+  /* Тексты статусов с контрастом WCAG AA на белом фоне */
+  --positive-text: #17784F;
+  --negative-text: #B83232;
+  --warning-text: #8A6300;
+
+  /* Фоны статусов */
+  --positive-light: #DDF3E8;
+  --negative-light: #FBE9E9;
+  --warning-light: #FDF4D9;
+
+  /* Палитра графиков: от тёмно-зелёного к светлому + нейтральный серый */
+  --chart-1: #1F6B43;
+  --chart-2: #2E8B57;
+  --chart-3: #4FA872;
+  --chart-4: #7BC59A;
+  --chart-5: #9FD4B2;
+  --chart-6: #BFE3CB;
+  --chart-neutral: #A7B5AC;
+
+  /* Скелетоны */
+  --skeleton-1: #EAF3ED;
+  --skeleton-2: #F6FAF7;
+
+  /* Геометрия */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --gap: 12px;
+  --page-pad: 20px;
+  --header-h: 60px;
+  --shadow: 0 1px 2px rgba(31, 45, 36, 0.04), 0 4px 16px rgba(31, 45, 36, 0.06);
+  --shadow-lg: 0 8px 28px rgba(31, 45, 36, 0.16);
+
+  /* Типографика */
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fs-kpi: clamp(22px, 1.9vw, 32px);
+  --fs-title: 14px;
+  --fs-body: 13px;
+  --fs-small: 12px;
+}
+
+@media (min-width: 1800px) {
+  :root {
+    --fs-title: 16px;
+  }
+}
+</style>
+  <style>/* css/base.css */
+/* Сброс стилей и базовая типографика */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--fs-body);
+  line-height: 1.45;
+  color: var(--text-primary);
+  background: var(--bg-page);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: progress;
+  opacity: 0.65;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+  <style>/* css/layout.css */
+/* Сетка дашборда и адаптивность */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Шапка ---------- */
+.header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  min-height: var(--header-h);
+  padding: 10px var(--page-pad);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ---------- Основная сетка: 12 колонок ---------- */
+.dashboard {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-rows: auto;
+  gap: var(--gap);
+  padding: var(--gap) var(--page-pad) 16px;
+}
+
+.kpi-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--gap);
+}
+
+.area-trend,
+.area-planfact,
+.area-expenses,
+.area-deviations,
+.area-alerts {
+  grid-column: span 6;
+}
+
+.area-debts,
+.area-macro {
+  grid-column: span 3;
+}
+
+.chart-card {
+  min-height: 270px;
+}
+
+/* ---------- ≥1440 px: всё в одном экране без прокрутки ---------- */
+@media (min-width: 1440px) and (min-height: 720px) {
+  .app {
+    height: 100vh;
+  }
+
+  .dashboard {
+    min-height: 0;
+    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+
+  .chart-card,
+  .area-debts,
+  .area-macro,
+  .chart-box {
+    min-height: 0;
+  }
+
+  .card:not(.kpi-card) {
+    gap: 8px;
+    padding: 12px 16px;
+  }
+
+  .macro-row {
+    padding: 3px 0;
+    line-height: 1.35;
+  }
+
+  .debt {
+    gap: 3px;
+    padding: 8px 12px;
+  }
+
+  /* Лента уведомлений не растягивает строку — высоту задаёт таблица отклонений */
+  .area-alerts {
+    contain: size;
+  }
+}
+
+/* ---------- 1024–1439 px: уплотнённая сетка ---------- */
+@media (max-width: 1439px) {
+  :root {
+    --fs-kpi: 26px;
+    --page-pad: 16px;
+  }
+
+  .kpi-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1279px) {
+  .area-expenses {
+    grid-column: 1 / -1;
+  }
+
+  .area-debts,
+  .area-macro {
+    grid-column: span 6;
+  }
+}
+
+/* ---------- < 1024 px: вертикальный стек ---------- */
+@media (max-width: 1023px) {
+  .dashboard {
+    grid-template-columns: minmax(0, 1fr);
+    padding-bottom: 32px;
+  }
+
+  .area-trend,
+  .area-planfact,
+  .area-expenses,
+  .area-debts,
+  .area-macro,
+  .area-deviations,
+  .area-alerts {
+    grid-column: 1 / -1;
+  }
+
+  .kpi-row {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    margin: 0 calc(-1 * var(--page-pad));
+    padding: 4px var(--page-pad) 8px;
+    scroll-padding-left: var(--page-pad);
+  }
+
+  .kpi-row > .kpi-card {
+    flex: 0 0 240px;
+    scroll-snap-align: start;
+  }
+
+  .controls {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .header .updated {
+    order: 10;
+    width: 100%;
+  }
+}
+</style>
+  <style>/* css/components.css */
+/* Карточки, таблицы, кнопки, виджеты, скелетоны */
+
+/* ---------- Бренд ---------- */
+.brand-logo {
+  flex: none;
+  width: 34px;
+  height: 34px;
+}
+
+.brand-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.brand-sub {
+  font-size: var(--fs-small);
+  color: var(--text-secondary);
+}
+
+.badge-demo {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent-dark);
+  background: var(--accent-light);
+}
+
+/* ---------- Кнопки и поля ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.btn:hover {
+  background: var(--accent-light);
+}
+
+.btn-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #FFFFFF;
+}
+
+.btn-primary:hover {
+  border-color: var(--accent-dark);
+  background: var(--accent-dark);
+}
+
+.btn svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.icon-btn {
+  width: 34px;
+  padding: 0;
+}
+
+.icon-btn.is-spinning svg {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.date-input {
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  font-size: var(--fs-body);
+}
+
+.updated {
+  font-size: var(--fs-small);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* Сегментированный переключатель (валюта, период) */
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-page);
+}
+
+.segmented button {
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.segmented button:hover {
+  color: var(--text-primary);
+}
+
+.segmented button[aria-checked="true"] {
+  background: var(--bg-card);
+  color: var(--accent-dark);
+  box-shadow: 0 1px 2px rgba(31, 45, 36, 0.14);
+}
+
+.segmented-sm button {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+/* Выпадающее меню экспорта */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  min-width: 230px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-lg);
+}
+
+.dropdown-menu[hidden] {
+  display: none;
+}
+
+.dropdown-menu button {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+}
+
+.dropdown-menu button:hover,
+.dropdown-menu button:focus-visible {
+  background: var(--accent-light);
+}
+
+.menu-title {
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+
+.menu-sub {
+  font-size: var(--fs-small);
+  color: var(--text-secondary);
+}
+
+/* ---------- Карточки ---------- */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  box-shadow: var(--shadow);
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 24px;
+}
+
+.card-title {
+  font-size: var(--fs-title);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.card-note {
+  font-size: var(--fs-small);
+  color: var(--text-secondary);
+}
+
+/* ---------- KPI ---------- */
+.kpi-card {
+  gap: 3px;
+  padding: 12px 14px;
+}
+
+.kpi-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.kpi-title {
+  overflow: hidden;
+  padding-top: 2px;
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.kpi-value {
+  overflow: hidden;
+  font-size: var(--fs-kpi);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.kpi-delta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  font-size: var(--fs-small);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.delta {
+  font-weight: 600;
+}
+
+.delta-good {
+  color: var(--positive-text);
+}
+
+.delta-bad {
+  color: var(--negative-text);
+}
+
+.delta-neutral {
+  color: var(--text-secondary);
+}
+
+.delta-abs {
+  font-weight: 500;
+}
+
+.delta-caption {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--text-secondary);
+  text-overflow: ellipsis;
+}
+
+.kpi-delta .delta-caption {
+  flex: none;
+  width: 42px;
+}
+
+.kpi-plan {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.kpi-plan-label {
+  font-size: var(--fs-small);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.progress {
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--accent-light);
+}
+
+.progress-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+
+.progress-good .progress-fill {
+  background: var(--positive);
+}
+
+.progress-warn .progress-fill {
+  background: var(--warning);
+}
+
+.progress-bad .progress-fill {
+  background: var(--negative);
+}
+
+.sparkline {
+  flex: none;
+  color: var(--accent);
+}
+
+.sparkline-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sparkline-area {
+  fill: currentColor;
+  opacity: 0.12;
+}
+
+.sparkline-dot {
+  fill: currentColor;
+}
+
+/* ---------- Графики ---------- */
+.chart-box {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 140px;
+}
+
+.chart-box canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.chart-box.is-unavailable::after {
+  content: attr(data-message);
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  font-size: var(--fs-body);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.legend-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.legend-inline li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+
+.dot-plan {
+  background: var(--chart-neutral);
+  opacity: 0.6;
+}
+
+.dot-fact {
+  background: var(--accent);
+}
+
+.dot-bad {
+  background: var(--negative);
+}
+
+.dot-good {
+  background: var(--positive);
+}
+
+/* Структура расходов */
+.expenses-body {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  align-items: center;
+  gap: 16px;
+  min-height: 0;
+}
+
+.expenses-body .chart-box {
+  height: 100%;
+}
+
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.donut-total {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.donut-caption {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.legend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-small);
+}
+
+.legend-item {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.legend-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.legend-share {
+  min-width: 44px;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.legend-amount {
+  min-width: 76px;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* ---------- Задолженности ---------- */
+.debts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 10px;
+}
+
+.debt {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--bg-page);
+}
+
+.debt-name {
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.debt-total {
+  overflow: hidden;
+  font-size: 17px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.debt-change {
+  font-size: var(--fs-small);
+}
+
+.overdue {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.overdue-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.overdue-label strong {
+  color: var(--text-primary);
+}
+
+.overdue .progress {
+  flex: none;
+  background: var(--border);
+}
+
+/* ---------- Макропоказатели ---------- */
+.macro-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.macro-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 62px;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.macro-row:last-child {
+  border-bottom: 0;
+}
+
+.macro-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.macro-code {
+  font-weight: 600;
+}
+
+.macro-name {
+  margin-left: 6px;
+  font-size: var(--fs-small);
+  color: var(--text-secondary);
+}
+
+.macro-value {
+  font-weight: 600;
+  text-align: right;
+}
+
+.macro-change {
+  font-size: var(--fs-small);
+  text-align: right;
+}
+
+/* ---------- Таблица отклонений ---------- */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-body);
+}
+
+.table th,
+.table td {
+  padding: 4px 8px;
+  line-height: 1.35;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.table th:first-child,
+.table td:first-child {
+  padding-left: 0;
+  text-align: left;
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: 0;
+}
+
+.table thead th {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.table tbody th {
+  font-weight: 500;
+}
+
+.table tbody tr:last-child th,
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.dev-abs {
+  margin-left: 4px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+/* ---------- Уведомления ---------- */
+.count-chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-page);
+}
+
+.count-chip.has-critical {
+  color: var(--negative-text);
+  background: var(--negative-light);
+}
+
+.alert-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.alert {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 10px;
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent-light);
+  line-height: 1.35;
+}
+
+.alert-badge {
+  flex: none;
+  min-width: 82px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--accent-dark);
+}
+
+.alert-critical {
+  border-color: var(--negative);
+  background: var(--negative-light);
+}
+
+.alert-critical .alert-badge {
+  color: var(--negative-text);
+}
+
+.alert-warning {
+  border-color: var(--warning);
+  background: var(--warning-light);
+}
+
+.alert-warning .alert-badge {
+  color: var(--warning-text);
+}
+
+/* ---------- Уведомление об ошибке ---------- */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: calc(100vw - 32px);
+  padding: 10px 10px 10px 16px;
+  border-radius: 10px;
+  background: var(--text-primary);
+  color: #FFFFFF;
+  box-shadow: var(--shadow-lg);
+  transform: translateX(-50%);
+}
+
+.toast[hidden] {
+  display: none;
+}
+
+.toast .btn {
+  height: 30px;
+  border-color: transparent;
+}
+
+.toast .btn:hover {
+  background: var(--accent-light);
+}
+
+.toast-close {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #FFFFFF;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* ---------- Скелетоны загрузки ---------- */
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+body.is-loading .card > :not(.card-head),
+body.is-loading .kpi-card > * {
+  visibility: hidden;
+}
+
+body.is-loading .card::after {
+  content: "";
+  position: absolute;
+  top: 48px;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--skeleton-1) 25%, var(--skeleton-2) 50%, var(--skeleton-1) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+body.is-loading .kpi-card::after {
+  inset: 14px;
+}
+
+@media (max-width: 1023px) {
+  .dev-abs {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .expenses-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .expenses-body .chart-box {
+    height: 180px;
+  }
+
+  .debts-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .alert {
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+</style>
+</head>
+<body class="is-loading">
+  <div class="app" id="app">
+
+    <!-- ШАПКА -->
+    <header class="header">
+      <div class="brand">
+        <svg class="brand-logo" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <rect width="32" height="32" rx="8" fill="#2E8B57"/>
+          <path d="M8.5 23v-5M13.5 23v-9M18.5 23v-6.5M23.5 23V9" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" fill="none"/>
+        </svg>
+        <div>
+          <h1 class="brand-title">Финансовые итоги дня <span class="badge-demo" title="Данные сгенерированы для демонстрации">Демо-данные</span></h1>
+          <p class="brand-sub" id="date-label">Загрузка…</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <label>
+          <span class="sr-only">Дата отчёта</span>
+          <input class="date-input" type="date" id="date-input">
+        </label>
+
+        <div class="segmented" id="currency-switch" role="radiogroup" aria-label="Валюта отображения">
+          <button type="button" role="radio" data-value="RUB" aria-checked="true">RUB</button>
+          <button type="button" role="radio" data-value="USD" aria-checked="false">USD</button>
+          <button type="button" role="radio" data-value="EUR" aria-checked="false">EUR</button>
+        </div>
+
+        <span class="updated" id="updated-at" aria-live="polite">Обновлено: —</span>
+
+        <button type="button" class="btn icon-btn" id="refresh-btn" aria-label="Обновить данные" title="Обновить данные">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36"/>
+            <path d="M21 3v6h-6"/>
+          </svg>
+        </button>
+
+        <div class="dropdown" id="export-dropdown">
+          <button type="button" class="btn btn-primary" id="export-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="export-menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <path d="M12 3v12"/>
+              <path d="m7 10 5 5 5-5"/>
+              <path d="M5 21h14"/>
+            </svg>
+            Экспорт
+          </button>
+          <ul class="dropdown-menu" id="export-menu" role="menu" aria-label="Формат экспорта" hidden>
+            <li role="none">
+              <button type="button" role="menuitem" data-export="pdf">
+                <span class="menu-title">PDF</span>
+                <span class="menu-sub">Снимок дашборда</span>
+              </button>
+            </li>
+            <li role="none">
+              <button type="button" role="menuitem" data-export="xlsx">
+                <span class="menu-title">XLSX</span>
+                <span class="menu-sub">Данные дня на отдельных листах</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard" id="dashboard" aria-busy="true">
+
+      <!-- KPI-КАРТОЧКИ -->
+      <section class="kpi-row" id="kpi-row" aria-label="Ключевые показатели дня">
+        <article class="card kpi-card"></article>
+        <article class="card kpi-card"></article>
+        <article class="card kpi-card"></article>
+        <article class="card kpi-card"></article>
+        <article class="card kpi-card"></article>
+        <article class="card kpi-card"></article>
+      </section>
+
+      <!-- ДИНАМИКА -->
+      <section class="card chart-card area-trend" aria-labelledby="trend-title">
+        <div class="card-head">
+          <h2 class="card-title" id="trend-title">Динамика выручки и прибыли</h2>
+          <div class="segmented segmented-sm" id="period-switch" role="radiogroup" aria-label="Период графика">
+            <button type="button" role="radio" data-value="7" aria-checked="false">7 дн.</button>
+            <button type="button" role="radio" data-value="30" aria-checked="true">30 дн.</button>
+            <button type="button" role="radio" data-value="90" aria-checked="false">90 дн.</button>
+          </div>
+        </div>
+        <div class="chart-box">
+          <canvas id="trend-chart" role="img" aria-label="Линейный график динамики выручки и прибыли"></canvas>
+        </div>
+      </section>
+
+      <!-- ПЛАН / ФАКТ -->
+      <section class="card chart-card area-planfact" aria-labelledby="planfact-title">
+        <div class="card-head">
+          <h2 class="card-title" id="planfact-title">План / факт по статьям</h2>
+          <ul class="legend-inline" aria-label="Легенда">
+            <li><span class="dot dot-plan"></span>План</li>
+            <li><span class="dot dot-fact"></span>Факт</li>
+            <li><span class="dot dot-bad"></span>Хуже плана &gt;&nbsp;10&nbsp;%</li>
+            <li><span class="dot dot-good"></span>Лучше плана &gt;&nbsp;10&nbsp;%</li>
+          </ul>
+        </div>
+        <div class="chart-box">
+          <canvas id="planfact-chart" role="img" aria-label="Горизонтальная диаграмма план/факт по статьям"></canvas>
+        </div>
+      </section>
+
+      <!-- СТРУКТУРА РАСХОДОВ -->
+      <section class="card chart-card area-expenses" aria-labelledby="expenses-title">
+        <div class="card-head">
+          <h2 class="card-title" id="expenses-title">Структура расходов</h2>
+        </div>
+        <div class="expenses-body">
+          <div class="chart-box">
+            <canvas id="expenses-chart" role="img" aria-label="Кольцевая диаграмма структуры расходов"></canvas>
+            <div class="donut-center" aria-hidden="true">
+              <span class="donut-total" id="expenses-total">—</span>
+              <span class="donut-caption">всего за день</span>
+            </div>
+          </div>
+          <ul class="legend-list" id="expenses-legend" aria-label="Статьи расходов"></ul>
+        </div>
+      </section>
+
+      <!-- ЗАДОЛЖЕННОСТИ -->
+      <section class="card area-debts" aria-labelledby="debts-title">
+        <div class="card-head">
+          <h2 class="card-title" id="debts-title">Задолженность</h2>
+        </div>
+        <div class="debts-grid" id="debts"></div>
+      </section>
+
+      <!-- МАКРОПОКАЗАТЕЛИ -->
+      <section class="card area-macro" aria-labelledby="macro-title">
+        <div class="card-head">
+          <h2 class="card-title" id="macro-title">Макропоказатели</h2>
+          <span class="card-note">ЦБ, на дату</span>
+        </div>
+        <ul class="macro-list" id="macro"></ul>
+      </section>
+
+      <!-- ТОП-5 ОТКЛОНЕНИЙ -->
+      <section class="card area-deviations" aria-labelledby="deviations-title">
+        <div class="card-head">
+          <h2 class="card-title" id="deviations-title">Топ-5 отклонений дня</h2>
+          <span class="card-note">по модулю отклонения от плана</span>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Статья</th>
+              <th scope="col">План</th>
+              <th scope="col">Факт</th>
+              <th scope="col">Отклонение</th>
+            </tr>
+          </thead>
+          <tbody id="deviations-body"></tbody>
+        </table>
+      </section>
+
+      <!-- УВЕДОМЛЕНИЯ -->
+      <section class="card area-alerts" aria-labelledby="alerts-title">
+        <div class="card-head">
+          <h2 class="card-title" id="alerts-title">Уведомления и риски</h2>
+          <span class="count-chip" id="alerts-count">0</span>
+        </div>
+        <ul class="alert-list" id="alerts"></ul>
+      </section>
+    </main>
+  </div>
+
+  <!-- Сообщение об ошибке -->
+  <div class="toast" id="toast" role="alert" hidden>
+    <span id="toast-text"></span>
+    <button type="button" class="btn" id="retry-btn">Повторить</button>
+    <button type="button" class="toast-close" id="toast-close" aria-label="Закрыть сообщение">&times;</button>
+  </div>
+
+  <!-- Сторонние библиотеки (CDN, фиксированные версии) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- Приложение -->
+  <script>/* js/config.js */
+/**
+ * Константы приложения. Все файлы публикуют свои функции в пространство имён window.Dashboard.
+ */
+window.Dashboard = window.Dashboard || {};
+
+window.Dashboard.config = Object.freeze({
+  /** Локаль форматирования чисел и дат */
+  LOCALE: 'ru-RU',
+
+  /** Интервал автообновления данных, мс (5 минут) */
+  REFRESH_INTERVAL_MS: 5 * 60 * 1000,
+
+  /** Глубина истории: сколько дней назад можно выбрать и сколько дней в графике динамики */
+  HISTORY_DAYS: 90,
+
+  /** Периоды графика динамики, дней */
+  PERIODS: [7, 30, 90],
+  DEFAULT_PERIOD: 30,
+
+  /** Валюты отображения */
+  CURRENCIES: ['RUB', 'USD', 'EUR'],
+  DEFAULT_CURRENCY: 'RUB',
+
+  /** Порог подсветки отклонения от плана, % */
+  DEVIATION_THRESHOLD: 10,
+
+  /** Имитация сети: задержка ответа [мин, макс], мс */
+  NETWORK_DELAY_MS: [300, 600],
+
+  /** Имитация ошибок сервера (можно отключить) и их доля */
+  SIMULATE_ERRORS: true,
+  ERROR_RATE: 0.05,
+
+  /** Неснижаемый остаток денежных средств, ₽ — ниже него считается кассовым разрывом */
+  MIN_CASH_BALANCE: 80e6,
+
+  /** Целевой остаток денежных средств, ₽ — «план» для KPI-карточки */
+  CASH_TARGET: 90e6,
+
+  /** Доля просроченной дебиторской задолженности, после которой выдаётся предупреждение */
+  OVERDUE_WARN_SHARE: 0.12,
+});
+</script>
+  <script>/* js/format.js */
+/**
+ * Форматирование чисел, валют и дат (локаль ru-RU) и утилиты для работы с датами ISO (YYYY-MM-DD).
+ */
+(function (D) {
+  'use strict';
+
+  const LOCALE = D.config.LOCALE;
+  const NBSP = ' ';
+  const MINUS = '−';
+  const CURRENCY_SYMBOLS = { RUB: '₽', USD: '$', EUR: '€' };
+  const SCALES = [
+    [1e9, 'млрд'],
+    [1e6, 'млн'],
+    [1e3, 'тыс.'],
+  ];
+
+  const numberFormats = new Map();
+  const dateFormats = new Map();
+
+  function numberFormat(options) {
+    const key = JSON.stringify(options);
+    if (!numberFormats.has(key)) numberFormats.set(key, new Intl.NumberFormat(LOCALE, options));
+    return numberFormats.get(key);
+  }
+
+  function dateFormat(options) {
+    const key = JSON.stringify(options);
+    if (!dateFormats.has(key)) dateFormats.set(key, new Intl.DateTimeFormat(LOCALE, options));
+    return dateFormats.get(key);
+  }
+
+  // ---------- Числа ----------
+
+  /**
+   * Число с фиксированным количеством знаков после запятой и разделителями разрядов.
+   * @param {number} value
+   * @param {number} [digits=0]
+   * @returns {string}
+   */
+  function number(value, digits = 0) {
+    return numberFormat({ minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
+  }
+
+  /**
+   * Денежная сумма без копеек: «12 450 300 ₽».
+   * @param {number} value
+   * @param {string} currency RUB | USD | EUR
+   * @returns {string}
+   */
+  function money(value, currency) {
+    return numberFormat({ style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+  }
+
+  /**
+   * Сокращённая запись крупного числа: «12,5 млн», «840 тыс.».
+   * @param {number} value
+   * @param {number} [digits=1] максимум знаков после запятой
+   * @returns {string}
+   */
+  function compact(value, digits = 1) {
+    const abs = Math.abs(value);
+    for (const [divider, unit] of SCALES) {
+      if (abs >= divider) {
+        const scaled = value / divider;
+        const maxDigits = Math.abs(scaled) >= 100 ? 0 : digits;
+        return numberFormat({ maximumFractionDigits: maxDigits }).format(scaled) + NBSP + unit;
+      }
+    }
+    return number(value, 0);
+  }
+
+  /**
+   * Сокращённая денежная сумма: «12,5 млн ₽».
+   * @param {number} value
+   * @param {string} currency
+   * @returns {string}
+   */
+  function compactMoney(value, currency) {
+    return compact(value) + NBSP + currencySymbol(currency);
+  }
+
+  /**
+   * Процент: «12,3 %».
+   * @param {number} value значение в процентах (12.3, а не 0.123)
+   * @param {number} [digits=1]
+   * @returns {string}
+   */
+  function percent(value, digits = 1) {
+    return number(value, digits) + NBSP + '%';
+  }
+
+  /** Добавляет знак «+» / «−» к отформатированному модулю значения. */
+  function signed(value, formatter) {
+    const sign = value > 0 ? '+' : value < 0 ? MINUS : '';
+    return sign + formatter(Math.abs(value));
+  }
+
+  /** @returns {string} «+5,5 %» */
+  function signedPercent(value, digits = 1) {
+    return signed(value, (v) => percent(v, digits));
+  }
+
+  /** @returns {string} «−1,2» */
+  function signedNumber(value, digits = 0) {
+    return signed(value, (v) => number(v, digits));
+  }
+
+  /** @returns {string} «+650 тыс. ₽» */
+  function signedCompactMoney(value, currency) {
+    return signed(value, (v) => compactMoney(v, currency));
+  }
+
+  /** @returns {string} символ валюты */
+  function currencySymbol(currency) {
+    return CURRENCY_SYMBOLS[currency] || currency;
+  }
+
+  /**
+   * Склонение существительного после числа: plural(5, ['день', 'дня', 'дней']) → «дней».
+   * @param {number} n
+   * @param {string[]} forms
+   * @returns {string}
+   */
+  function plural(n, forms) {
+    const mod10 = n % 10;
+    const mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return forms[0];
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return forms[1];
+    return forms[2];
+  }
+
+  // ---------- Даты ----------
+
+  function pad(n) {
+    return String(n).padStart(2, '0');
+  }
+
+  /** @param {Date} date @returns {string} YYYY-MM-DD в локальном часовом поясе */
+  function toISO(date) {
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  }
+
+  /** @param {string} iso YYYY-MM-DD @returns {Date} локальная полночь */
+  function parseISO(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  /** @returns {boolean} строка — существующая дата в формате YYYY-MM-DD */
+  function isValidISO(iso) {
+    return typeof iso === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(iso) && toISO(parseISO(iso)) === iso;
+  }
+
+  /** @returns {string} дата, сдвинутая на n дней */
+  function addDays(iso, n) {
+    const date = parseISO(iso);
+    date.setDate(date.getDate() + n);
+    return toISO(date);
+  }
+
+  /** @returns {string} дата, сдвинутая на n месяцев (31 число → последний день короткого месяца) */
+  function addMonths(iso, n) {
+    const date = parseISO(iso);
+    const day = date.getDate();
+    date.setDate(1);
+    date.setMonth(date.getMonth() + n);
+    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    date.setDate(Math.min(day, lastDay));
+    return toISO(date);
+  }
+
+  /** @returns {string} сегодняшняя дата YYYY-MM-DD */
+  function today() {
+    return toISO(new Date());
+  }
+
+  /** @returns {string} «Четверг, 1 октября 2026 г.» */
+  function dateLong(iso) {
+    const text = dateFormat({ weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(parseISO(iso));
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  /** @returns {string} «1 октября 2026 г.» */
+  function dateMedium(iso) {
+    return dateFormat({ day: 'numeric', month: 'long', year: 'numeric' }).format(parseISO(iso));
+  }
+
+  /** @returns {string} «01.10» */
+  function dateShort(iso) {
+    return dateFormat({ day: '2-digit', month: '2-digit' }).format(parseISO(iso));
+  }
+
+  /** @returns {string} «август» */
+  function monthName(iso) {
+    return dateFormat({ month: 'long' }).format(parseISO(iso));
+  }
+
+  /** @param {string} dateTime ISO-строка даты и времени @returns {string} «09:15» */
+  function time(dateTime) {
+    return dateFormat({ hour: '2-digit', minute: '2-digit' }).format(new Date(dateTime));
+  }
+
+  D.format = {
+    NBSP,
+    number,
+    money,
+    compact,
+    compactMoney,
+    percent,
+    signedPercent,
+    signedNumber,
+    signedCompactMoney,
+    currencySymbol,
+    plural,
+    dateLong,
+    dateMedium,
+    dateShort,
+    monthName,
+    time,
+  };
+
+  D.dates = { toISO, parseISO, isValidISO, addDays, addMonths, today };
+})(window.Dashboard);
+</script>
+  <script>/* js/mock-data.js */
+/**
+ * Генератор моковых данных. Детерминирован по дате: для одной и той же даты всегда одни и те же значения.
+ * Все суммы считаются в рублях, пересчёт в другую валюту — по курсу выбранного дня.
+ */
+(function (D) {
+  'use strict';
+
+  const { addDays, addMonths } = D.dates;
+  const f = D.format;
+  const cfg = D.config;
+
+  /** Коэффициенты дня недели (вс, пн … сб): просадка в выходные */
+  const WEEK = [0.66, 1.0, 1.04, 1.03, 1.06, 1.12, 0.78];
+
+  const REVENUE_SPLIT = [
+    { name: 'розница', share: 0.46 },
+    { name: 'опт', share: 0.34 },
+    { name: 'онлайн', share: 0.2 },
+  ];
+
+  /** Статьи расходов: fixed — не зависят от выручки дня, доля — от базовой выручки */
+  const EXPENSE_ITEMS = [
+    { key: 'payroll', name: 'ФОТ', fixed: true, share: 0.255 },
+    { key: 'purchases', name: 'Закупки', fixed: false, share: 0.36 },
+    { key: 'marketing', name: 'Маркетинг', fixed: false, share: 0.065 },
+    { key: 'rent', name: 'Аренда', fixed: true, share: 0.045 },
+    { key: 'taxes', name: 'Налоги', fixed: false, share: 0.06 },
+    { key: 'other', name: 'Прочие', fixed: true, share: 0.03 },
+  ];
+  const OVERRUN_CANDIDATES = ['marketing', 'purchases', 'payroll'];
+
+  /** График ключевой ставки (моковый) */
+  const KEY_RATE_SCHEDULE = [
+    ['2025-01-01', 21],
+    ['2026-02-13', 20],
+    ['2026-04-24', 19],
+    ['2026-06-05', 18],
+    ['2026-07-24', 17],
+    ['2026-09-11', 16.5],
+  ];
+
+  const KPI_DEFS = [
+    { id: 'revenue', title: 'Выручка', unit: 'money', inverse: false, value: (d) => d.revenue, plan: (d) => d.revenuePlan },
+    { id: 'expenses', title: 'Расходы', unit: 'money', inverse: true, value: (d) => d.expensesTotal, plan: (d) => d.expensesPlan },
+    { id: 'profit', title: 'Чистая прибыль', unit: 'money', inverse: false, value: (d) => d.profit, plan: (d) => d.profitPlan },
+    { id: 'margin', title: 'Маржинальность', unit: 'percent', inverse: false, value: (d) => d.margin, plan: (d) => d.marginPlan },
+    { id: 'cashflow', title: 'Операционный денежный поток', unit: 'money', inverse: false, value: (d) => d.opCashFlow, plan: (d) => d.opCashFlowPlan },
+    { id: 'cash', title: 'Остаток денежных средств', unit: 'money', inverse: false, value: (d) => d.cashBalance, plan: () => cfg.CASH_TARGET },
+  ];
+
+  const LEVEL_ORDER = { critical: 0, warning: 1, info: 2 };
+
+  // ---------- Псевдослучайный генератор с seed = дата ----------
+
+  function hashString(text) {
+    let h = 2166136261;
+    for (let i = 0; i < text.length; i++) {
+      h ^= text.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  function mulberry32(seed) {
+    let a = seed;
+    return function () {
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // ---------- Утилиты ----------
+
+  const sum = (values) => values.reduce((acc, v) => acc + v, 0);
+  const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+  const round = (v, digits = 0) => Math.round(v * 10 ** digits) / 10 ** digits;
+  const roundTo = (v, step) => Math.round(v / step) * step;
+
+  function dayIndex(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return Math.round(Date.UTC(y, m - 1, d) / 86400000);
+  }
+
+  const T0 = dayIndex('2026-01-01');
+
+  function keyRateFor(iso) {
+    let rate = KEY_RATE_SCHEDULE[0][1];
+    for (const [from, value] of KEY_RATE_SCHEDULE) if (iso >= from) rate = value;
+    return rate;
+  }
+
+  /** Инфляция г/г за предыдущий месяц (последнее опубликованное значение) */
+  function inflationFor(iso) {
+    const [y, m] = iso.split('-').map(Number);
+    const period = new Date(y, m - 2, 1);
+    const idx = (period.getFullYear() - 2026) * 12 + period.getMonth();
+    const value = round(8.4 - idx * 0.11 + 0.15 * Math.sin(idx * 1.7), 1);
+    return { value, period: D.dates.toISO(period) };
+  }
+
+  // ---------- Генерация одного дня (в рублях) ----------
+
+  const dayCache = new Map();
+
+  function generateDay(iso) {
+    if (dayCache.has(iso)) return dayCache.get(iso);
+
+    const t = dayIndex(iso);
+    const weekday = (((t % 7) + 7) + 4) % 7; // 1970-01-01 — четверг
+    const r = mulberry32(hashString(iso));
+    const jitter = (amp) => (r() * 2 - 1) * amp;
+
+    // Плавный тренд + сезонность недели
+    const base = 12.6e6 * (1 + 0.05 * Math.sin(t / 13) + 0.035 * Math.sin(t / 37 + 1.3)) * (1 + (t - T0) * 0.0005);
+    const seasonal = base * WEEK[weekday];
+    const revenuePlan = roundTo(seasonal * 1.02, 10000);
+
+    // «Проблемные» дни
+    const roll = r();
+    const problem = roll < 0.06 ? 'revenueDrop' : roll < 0.14 ? 'overrun' : roll < 0.18 ? 'cashOut' : null;
+
+    // Выручка по направлениям
+    const dropFactor = problem === 'revenueDrop' ? 0.8 - r() * 0.08 : 1;
+    const revenueByDirection = REVENUE_SPLIT.map(({ name, share }) => ({
+      name,
+      plan: revenuePlan * share,
+      fact: seasonal * share * (1 + jitter(0.07)) * dropFactor,
+    }));
+    const revenue = sum(revenueByDirection.map((x) => x.fact));
+
+    // Расходы по статьям
+    const overrunKey = problem === 'overrun' ? OVERRUN_CANDIDATES[Math.floor(r() * OVERRUN_CANDIDATES.length)] : null;
+    const expenses = EXPENSE_ITEMS.map((item) => {
+      const plan = item.fixed ? base * item.share : revenuePlan * item.share;
+      let fact = item.fixed ? plan * (1 + jitter(0.04)) : revenue * item.share * (1 + jitter(0.06));
+      if (item.key === overrunKey) fact *= 1.16 + r() * 0.14;
+      return { key: item.key, name: item.name, plan, fact };
+    });
+    const expensesTotal = sum(expenses.map((e) => e.fact));
+    const expensesPlan = sum(expenses.map((e) => e.plan));
+
+    const profit = revenue - expensesTotal;
+    const profitPlan = revenuePlan - expensesPlan;
+
+    // Денежный поток и остаток
+    let opCashFlow = profit * (0.75 + r() * 0.5) + jitter(0.04) * revenue;
+    if (problem === 'cashOut') opCashFlow = -revenue * (0.08 + r() * 0.06);
+    const opCashFlowPlan = profitPlan * 0.9;
+    const cashBalance =
+      90e6 + 9e6 * Math.sin(t / 23) + 5e6 * Math.sin(t / 7.3 + 0.5) + jitter(1.2e6) - (problem === 'cashOut' ? 4e6 : 0);
+
+    // Задолженности
+    const receivable = 46e6 + 5e6 * Math.sin(t / 17) + 2e6 * Math.sin(t / 5.1) + jitter(0.6e6);
+    const receivableOverdue = clamp(0.095 + 0.045 * Math.sin(t / 29 + 0.7) + jitter(0.012), 0.02, 0.4);
+    const payable = 38e6 + 4e6 * Math.sin(t / 13 + 2) + jitter(0.5e6);
+    const payableOverdue = clamp(0.05 + 0.025 * Math.sin(t / 31) + jitter(0.01), 0.01, 0.3);
+
+    // Макроэкономика
+    const usd = 92.4 + 3.1 * Math.sin(t / 37) + 1.1 * Math.sin(t / 9.5) + jitter(0.35);
+    const eur = usd * (1.08 + 0.01 * Math.sin(t / 50)) + jitter(0.3);
+    const cny = usd / 7.18 + jitter(0.04);
+
+    const day = {
+      date: iso,
+      revenue,
+      revenuePlan,
+      revenueByDirection,
+      expenses,
+      expensesTotal,
+      expensesPlan,
+      profit,
+      profitPlan,
+      margin: (profit / revenue) * 100,
+      marginPlan: (profitPlan / revenuePlan) * 100,
+      opCashFlow,
+      opCashFlowPlan,
+      cashBalance,
+      receivable,
+      receivableOverdue,
+      payable,
+      payableOverdue,
+      usd,
+      eur,
+      cny,
+      keyRate: keyRateFor(iso),
+      inflation: inflationFor(iso),
+    };
+    dayCache.set(iso, day);
+    return day;
+  }
+
+  // ---------- Уведомления ----------
+
+  function buildAlerts(date, day, prev) {
+    const th = cfg.DEVIATION_THRESHOLD;
+    const alerts = [];
+
+    // Выручка против плана
+    const revenueDev = (day.revenue / day.revenuePlan - 1) * 100;
+    if (revenueDev <= -th) {
+      alerts.push({
+        level: revenueDev <= -2 * th ? 'critical' : 'warning',
+        text: `Выручка ниже плана на ${f.number(-revenueDev, 1)}${f.NBSP}%`,
+      });
+    }
+
+    // Кассовый разрыв: ниже неснижаемого остатка или прогноз по тренду последней недели
+    const weekAgo = generateDay(addDays(date, -7));
+    const slope = (day.cashBalance - weekAgo.cashBalance) / 7;
+    if (day.cashBalance < cfg.MIN_CASH_BALANCE) {
+      alerts.push({ level: 'critical', text: 'Остаток денежных средств ниже неснижаемого уровня — кассовый разрыв' });
+    } else if (slope < 0) {
+      const days = Math.floor((day.cashBalance - cfg.MIN_CASH_BALANCE) / -slope);
+      if (days <= 21) {
+        alerts.push({
+          level: days <= 7 ? 'critical' : 'warning',
+          text: `Прогноз кассового разрыва через ${days} ${f.plural(days, ['день', 'дня', 'дней'])} при текущей динамике остатка`,
+        });
+      }
+    }
+
+    if (day.opCashFlow < 0) {
+      alerts.push({ level: 'warning', text: 'Отрицательный операционный денежный поток за день' });
+    }
+
+    // Превышение бюджета по статьям расходов
+    day.expenses.forEach((e) => {
+      const dev = (e.fact / e.plan - 1) * 100;
+      if (dev > th) {
+        alerts.push({
+          level: dev > 2 * th ? 'critical' : 'warning',
+          text: `Превышение бюджета по статье «${e.name}» на ${f.number(dev, 0)}${f.NBSP}%`,
+        });
+      }
+    });
+
+    // Просроченная дебиторская задолженность
+    const overdueDelta = (day.receivableOverdue - prev.receivableOverdue) * 100;
+    if (day.receivableOverdue >= cfg.OVERDUE_WARN_SHARE && overdueDelta > 0) {
+      alerts.push({
+        level: 'warning',
+        text: `Рост просроченной дебиторской задолженности: ${f.percent(day.receivableOverdue * 100)} (${f.signedNumber(overdueDelta, 1)} п.п. за день)`,
+      });
+    } else if (overdueDelta >= 1) {
+      alerts.push({ level: 'info', text: `Доля просроченной дебиторской задолженности выросла на ${f.number(overdueDelta, 1)} п.п.` });
+    }
+
+    // Макроэкономический контекст
+    const usdChange = day.usd - prev.usd;
+    if (Math.abs(usdChange) >= 0.5) {
+      alerts.push({
+        level: 'info',
+        text: `Курс USD ${usdChange > 0 ? 'вырос' : 'снизился'} на ${f.number(Math.abs(usdChange), 2)}${f.NBSP}₽ за день`,
+      });
+    }
+    if (day.keyRate !== prev.keyRate) {
+      alerts.push({ level: 'info', text: `ЦБ изменил ключевую ставку: ${f.percent(day.keyRate, 2)}` });
+    }
+
+    if (alerts.length === 0) {
+      alerts.push({ level: 'info', text: 'Существенных отклонений и рисков не выявлено' });
+    }
+
+    return alerts.sort((a, b) => LEVEL_ORDER[a.level] - LEVEL_ORDER[b.level]);
+  }
+
+  // ---------- Сборка ответа «сервера» ----------
+
+  /**
+   * Собирает полный набор данных дашборда за дату в выбранной валюте.
+   * @param {string} date YYYY-MM-DD
+   * @param {string} currency RUB | USD | EUR
+   * @returns {object} объект по модели данных из раздела 9 ТЗ
+   */
+  function build(date, currency) {
+    const day = generateDay(date);
+    const prev = generateDay(addDays(date, -1));
+    const prevMonth = generateDay(addMonths(date, -1));
+
+    const rate = currency === 'USD' ? day.usd : currency === 'EUR' ? day.eur : 1;
+    const money = (v) => (rate === 1 ? Math.round(v) : round(v / rate, 2));
+    const last7 = Array.from({ length: 7 }, (_, i) => generateDay(addDays(date, i - 6)));
+
+    const kpi = KPI_DEFS.map((def) => {
+      const conv = def.unit === 'percent' ? (v) => round(v, 2) : money;
+      return {
+        id: def.id,
+        title: def.title,
+        unit: def.unit,
+        value: conv(def.value(day)),
+        plan: conv(def.plan(day)),
+        prevDay: conv(def.value(prev)),
+        prevMonthSameDay: conv(def.value(prevMonth)),
+        sparkline: last7.map((d) => conv(def.value(d))),
+        inverse: def.inverse,
+      };
+    });
+
+    const trend = Array.from({ length: cfg.HISTORY_DAYS }, (_, i) => {
+      const iso = addDays(date, i - cfg.HISTORY_DAYS + 1);
+      const d = generateDay(iso);
+      return { date: iso, revenue: money(d.revenue), profit: money(d.profit), plan: money(d.revenuePlan) };
+    });
+
+    const planFact = [
+      ...day.revenueByDirection.map((x) => ({ item: `Выручка: ${x.name}`, type: 'revenue', plan: money(x.plan), fact: money(x.fact) })),
+      ...day.expenses
+        .filter((e) => e.key !== 'other')
+        .map((e) => ({ item: e.name, type: 'expense', plan: money(e.plan), fact: money(e.fact) })),
+    ];
+
+    const expenses = day.expenses.map((e) => ({ category: e.name, amount: money(e.fact) }));
+
+    const debts = {
+      receivable: {
+        total: money(day.receivable),
+        change: money(day.receivable - prev.receivable),
+        overdueShare: round(day.receivableOverdue, 4),
+      },
+      payable: {
+        total: money(day.payable),
+        change: money(day.payable - prev.payable),
+        overdueShare: round(day.payableOverdue, 4),
+      },
+    };
+
+    const macro = {
+      rates: [
+        { code: 'USD', name: 'Доллар США', value: round(day.usd, 2), change: round(day.usd - prev.usd, 2) },
+        { code: 'EUR', name: 'Евро', value: round(day.eur, 2), change: round(day.eur - prev.eur, 2) },
+        { code: 'CNY', name: 'Юань', value: round(day.cny, 2), change: round(day.cny - prev.cny, 2) },
+      ],
+      keyRate: day.keyRate,
+      keyRateChange: round(day.keyRate - prev.keyRate, 2),
+      inflation: day.inflation.value,
+      inflationPeriod: day.inflation.period,
+    };
+
+    return {
+      date,
+      currency,
+      updatedAt: new Date().toISOString(),
+      kpi,
+      trend,
+      planFact,
+      expenses,
+      debts,
+      macro,
+      alerts: buildAlerts(date, day, prev),
+    };
+  }
+
+  D.mock = { build };
+})(window.Dashboard);
+</script>
+  <script>/* js/data-service.js */
+/**
+ * Единственная точка доступа к данным. Сейчас отдаёт моки с имитацией сети;
+ * для перехода на реальный API достаточно заменить тело getDashboardData().
+ */
+(function (D) {
+  'use strict';
+
+  /**
+   * Загружает данные дашборда за дату.
+   * @param {string} date дата в формате YYYY-MM-DD
+   * @param {string} currency валюта отображения: RUB | USD | EUR
+   * @returns {Promise<object>} данные по модели из раздела 9 ТЗ
+   */
+  function getDashboardData(date, currency) {
+    const cfg = D.config;
+    const [minDelay, maxDelay] = cfg.NETWORK_DELAY_MS;
+    const delay = minDelay + Math.random() * (maxDelay - minDelay);
+
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (cfg.SIMULATE_ERRORS && Math.random() < cfg.ERROR_RATE) {
+          reject(new Error('Сервер данных временно недоступен. Попробуйте ещё раз.'));
+          return;
+        }
+        try {
+          resolve(D.mock.build(date, currency));
+        } catch (err) {
+          reject(err);
+        }
+      }, delay);
+    });
+  }
+
+  D.dataService = { getDashboardData };
+})(window.Dashboard);
+</script>
+  <script>/* js/charts.js */
+/**
+ * Графики Chart.js: создаются один раз, при новых данных обновляются через chart.update().
+ * Цвета читаются из CSS-переменных, а не дублируются в JS.
+ */
+(function (D) {
+  'use strict';
+
+  const f = D.format;
+  const charts = {};
+  let ready = false;
+
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function alpha(hex, a) {
+    const n = parseInt(hex.replace('#', ''), 16);
+    return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+  }
+
+  function palette() {
+    return {
+      accent: cssVar('--accent'),
+      positive: cssVar('--positive'),
+      negative: cssVar('--negative'),
+      negativeText: cssVar('--negative-text'),
+      border: cssVar('--border'),
+      text: cssVar('--text-primary'),
+      textSecondary: cssVar('--text-secondary'),
+      card: cssVar('--bg-card'),
+      series: [1, 2, 3, 4, 5, 6].map((i) => cssVar(`--chart-${i}`)),
+      neutral: cssVar('--chart-neutral'),
+    };
+  }
+
+  /**
+   * Цвета категорий для кольцевой диаграммы и её легенды: оттенки зелёного, последний — серый.
+   * @param {number} count
+   * @returns {string[]}
+   */
+  function categoryColors(count) {
+    const p = palette();
+    const list = [...p.series.slice(0, 5), p.neutral];
+    return Array.from({ length: count }, (_, i) => list[i % list.length]);
+  }
+
+  /**
+   * Настраивает Chart.js. Если библиотека не загрузилась (нет сети), показывает заглушки.
+   * @returns {boolean} готовы ли графики
+   */
+  function init() {
+    if (typeof window.Chart === 'undefined') {
+      document.querySelectorAll('.chart-box').forEach((box) => {
+        box.classList.add('is-unavailable');
+        box.dataset.message = 'График недоступен: не удалось загрузить Chart.js (нет подключения к интернету)';
+      });
+      return false;
+    }
+
+    const p = palette();
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    Chart.defaults.font.family = cssVar('--font');
+    Chart.defaults.font.size = 11;
+    Chart.defaults.color = p.textSecondary;
+    Chart.defaults.borderColor = p.border;
+    Chart.defaults.animation.duration = reduceMotion ? 0 : 400;
+    Object.assign(Chart.defaults.plugins.tooltip, {
+      backgroundColor: p.text,
+      titleColor: '#FFFFFF',
+      bodyColor: '#FFFFFF',
+      padding: 10,
+      cornerRadius: 8,
+      boxPadding: 4,
+    });
+    ready = true;
+    return true;
+  }
+
+  /**
+   * Линейный график динамики выручки, прибыли и плана.
+   * @param {Array<{date:string,revenue:number,profit:number,plan:number}>} trend
+   * @param {number} period число последних дней для отображения
+   * @param {string} currency
+   */
+  function updateTrend(trend, period, currency) {
+    if (!ready) return;
+    const rows = trend.slice(-period);
+    const labels = rows.map((r) => f.dateShort(r.date));
+    const series = [rows.map((r) => r.revenue), rows.map((r) => r.profit), rows.map((r) => r.plan)];
+    const pointRadius = period <= 7 ? 3 : 0;
+    const canvas = document.getElementById('trend-chart');
+
+    let chart = charts.trend;
+    if (!chart) {
+      const p = palette();
+      chart = charts.trend = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Выручка', data: series[0], borderColor: p.series[0], backgroundColor: alpha(p.series[0], 0.07), fill: 'origin', borderWidth: 2, tension: 0.3 },
+            { label: 'Чистая прибыль', data: series[1], borderColor: p.series[3], backgroundColor: alpha(p.series[3], 0.16), fill: 'origin', borderWidth: 2, tension: 0.3 },
+            { label: 'План выручки', data: series[2], borderColor: p.neutral, borderDash: [5, 4], borderWidth: 1.5, fill: false, tension: 0.3 },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          elements: { point: { radius: pointRadius, hoverRadius: 4, hitRadius: 6 } },
+          plugins: {
+            legend: {
+              position: 'top',
+              align: 'end',
+              labels: { usePointStyle: true, pointStyle: 'rectRounded', boxWidth: 8, boxHeight: 8, padding: 12 },
+            },
+            tooltip: {
+              callbacks: {
+                title: (items) => f.dateLong(items[0].chart.$rows[items[0].dataIndex].date),
+                label: (ctx) => ` ${ctx.dataset.label}: ${f.money(ctx.parsed.y, ctx.chart.$currency)}`,
+              },
+            },
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 10 } },
+            y: {
+              border: { display: false },
+              grid: { color: alpha(p.border, 0.7) },
+              ticks: { maxTicksLimit: 5, callback: (v) => f.compact(v) },
+            },
+          },
+        },
+      });
+    } else {
+      chart.data.labels = labels;
+      series.forEach((data, i) => {
+        chart.data.datasets[i].data = data;
+      });
+      chart.options.elements.point.radius = pointRadius;
+    }
+    chart.$rows = rows;
+    chart.$currency = currency;
+    chart.update();
+
+    const last = rows[rows.length - 1];
+    canvas.setAttribute(
+      'aria-label',
+      `Динамика за ${period} дн. На ${f.dateMedium(last.date)}: выручка ${f.compactMoney(last.revenue, currency)}, ` +
+        `чистая прибыль ${f.compactMoney(last.profit, currency)}, план выручки ${f.compactMoney(last.plan, currency)}`
+    );
+  }
+
+  /**
+   * Горизонтальные бары план/факт. Отклонения больше порога подсвечиваются.
+   * @param {Array<{item:string,type:string,plan:number,fact:number}>} items
+   * @param {string} currency
+   */
+  function updatePlanFact(items, currency) {
+    if (!ready) return;
+    const p = palette();
+    const tones = items.map((it) => D.components.deviation(it).tone);
+    const factColors = tones.map((t) => (t === 'bad' ? p.negative : t === 'good' ? p.positive : p.accent));
+    const labels = items.map((it) => it.item);
+    const canvas = document.getElementById('planfact-chart');
+
+    let chart = charts.planFact;
+    if (!chart) {
+      chart = charts.planFact = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label: 'План', data: items.map((it) => it.plan), backgroundColor: alpha(p.neutral, 0.45), borderRadius: 3, barPercentage: 0.9, categoryPercentage: 0.78 },
+            { label: 'Факт', data: items.map((it) => it.fact), backgroundColor: factColors, borderRadius: 3, barPercentage: 0.9, categoryPercentage: 0.78 },
+          ],
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false, axis: 'y' },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` ${ctx.dataset.label}: ${f.money(ctx.parsed.x, ctx.chart.$currency)}`,
+                afterBody: (tooltipItems) => {
+                  const chartRef = tooltipItems[0].chart;
+                  const it = chartRef.$items[tooltipItems[0].dataIndex];
+                  const dev = D.components.deviation(it);
+                  return `Отклонение: ${f.signedPercent(dev.pct)} (${f.signedCompactMoney(it.fact - it.plan, chartRef.$currency)})`;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              border: { display: false },
+              grid: { color: alpha(p.border, 0.7) },
+              ticks: { maxTicksLimit: 5, callback: (v) => f.compact(v) },
+            },
+            y: {
+              border: { display: false },
+              grid: { display: false },
+              ticks: {
+                color: (ctx) => (ctx.chart.$tones && ctx.chart.$tones[ctx.index] === 'bad' ? p.negativeText : p.text),
+                font: (ctx) => ({ weight: ctx.chart.$tones && ctx.chart.$tones[ctx.index] !== 'neutral' ? '600' : '400' }),
+              },
+            },
+          },
+        },
+      });
+    } else {
+      chart.data.labels = labels;
+      chart.data.datasets[0].data = items.map((it) => it.plan);
+      chart.data.datasets[1].data = items.map((it) => it.fact);
+      chart.data.datasets[1].backgroundColor = factColors;
+    }
+    chart.$items = items;
+    chart.$tones = tones;
+    chart.$currency = currency;
+    chart.update();
+
+    const flagged = items.filter((_, i) => tones[i] !== 'neutral').map((it) => it.item);
+    canvas.setAttribute(
+      'aria-label',
+      `План/факт по ${items.length} статьям. ` +
+        (flagged.length ? `Отклонения больше порога: ${flagged.join(', ')}` : 'Существенных отклонений нет')
+    );
+  }
+
+  /**
+   * Кольцевая диаграмма структуры расходов.
+   * @param {Array<{category:string,amount:number}>} expenses
+   * @param {string} currency
+   */
+  function updateExpenses(expenses, currency) {
+    if (!ready) return;
+    const labels = expenses.map((e) => e.category);
+    const values = expenses.map((e) => e.amount);
+    const canvas = document.getElementById('expenses-chart');
+
+    let chart = charts.expenses;
+    if (!chart) {
+      const p = palette();
+      chart = charts.expenses = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{ data: values, backgroundColor: categoryColors(values.length), borderColor: p.card, borderWidth: 2, hoverOffset: 4 }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '70%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                  return ` ${ctx.label}: ${f.money(ctx.parsed, ctx.chart.$currency)} (${f.percent((ctx.parsed / total) * 100)})`;
+                },
+              },
+            },
+          },
+        },
+      });
+    } else {
+      chart.data.labels = labels;
+      chart.data.datasets[0].data = values;
+    }
+    chart.$currency = currency;
+    chart.update();
+
+    const total = values.reduce((a, b) => a + b, 0);
+    canvas.setAttribute(
+      'aria-label',
+      `Структура расходов, всего ${f.compactMoney(total, currency)}: ` +
+        expenses.map((e) => `${e.category} ${f.percent((e.amount / total) * 100)}`).join(', ')
+    );
+  }
+
+  /**
+   * Перерисовывает все графики.
+   * @param {object} data ответ getDashboardData()
+   * @param {{period:number}} state
+   */
+  function updateAll(data, state) {
+    updateTrend(data.trend, state.period, data.currency);
+    updatePlanFact(data.planFact, data.currency);
+    updateExpenses(data.expenses, data.currency);
+  }
+
+  D.charts = { init, updateAll, updateTrend, categoryColors };
+})(window.Dashboard);
+</script>
+  <script>/* js/components.js */
+/**
+ * Рендер HTML-виджетов: KPI-карточки, спарклайны, легенда расходов, задолженности,
+ * макропоказатели, таблица отклонений и лента уведомлений.
+ */
+(function (D) {
+  'use strict';
+
+  const f = D.format;
+  const cfg = D.config;
+  const $ = (id) => document.getElementById(id);
+
+  /** Короткие подписи для узких KPI-карточек (полное название — в подсказке) */
+  const SHORT_TITLES = { cashflow: 'Денежный поток', cash: 'Остаток средств' };
+  const LEVEL_LABELS = { critical: 'Критично', warning: 'Внимание', info: 'Информация' };
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  }
+
+  const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+
+  function arrow(diff) {
+    return diff > 0 ? '▲' : diff < 0 ? '▼' : '•';
+  }
+
+  /** good — изменение в лучшую сторону, bad — в худшую (для расходов логика инвертирована) */
+  function toneOf(diff, inverse) {
+    if (Math.abs(diff) < 1e-9) return 'neutral';
+    return diff > 0 !== inverse ? 'good' : 'bad';
+  }
+
+  /**
+   * Отклонение статьи от плана с учётом направления: для расходов перерасход — плохо.
+   * @param {{type:string,plan:number,fact:number}} item
+   * @returns {{pct:number, tone:'good'|'bad'|'neutral'}}
+   */
+  function deviation(item) {
+    const th = cfg.DEVIATION_THRESHOLD;
+    const pct = item.plan ? ((item.fact - item.plan) / Math.abs(item.plan)) * 100 : 0;
+    const isExpense = item.type === 'expense';
+    const bad = isExpense ? pct > th : pct < -th;
+    const good = isExpense ? pct < -th : pct > th;
+    return { pct, tone: bad ? 'bad' : good ? 'good' : 'neutral' };
+  }
+
+  /**
+   * Мини-график за 7 дней в виде inline SVG.
+   * @param {number[]} values
+   * @returns {string} SVG-разметка
+   */
+  function sparkline(values) {
+    const w = 64;
+    const h = 28;
+    const pad = 3;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const span = max - min || 1;
+    const points = values.map((v, i) => [
+      pad + (i * (w - 2 * pad)) / (values.length - 1),
+      h - pad - ((v - min) / span) * (h - 2 * pad),
+    ]);
+    const xy = points.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`);
+    const [lastX, lastY] = points[points.length - 1];
+    const area = `M${points[0][0].toFixed(1)},${h} L${xy.join(' L')} L${lastX.toFixed(1)},${h} Z`;
+    return (
+      `<svg class="sparkline" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true" focusable="false">` +
+      `<path class="sparkline-area" d="${area}"/>` +
+      `<polyline class="sparkline-line" points="${xy.join(' ')}"/>` +
+      `<circle class="sparkline-dot" cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="2.4"/>` +
+      `</svg>`
+    );
+  }
+
+  function kpiValue(kpi, currency) {
+    return kpi.unit === 'percent' ? f.percent(kpi.value, 1) : f.money(kpi.value, currency);
+  }
+
+  function deltaRow(kpi, base, caption, fullCaption, currency) {
+    const diff = kpi.value - base;
+    const tone = toneOf(diff, kpi.inverse);
+    let main;
+    let extra = '';
+    if (kpi.unit === 'percent') {
+      main = `${f.signedNumber(diff, 1)}${f.NBSP}п.п.`;
+    } else {
+      const pct = base ? (diff / Math.abs(base)) * 100 : 0;
+      main = f.signedPercent(pct);
+      extra = `<span class="delta-abs">${f.signedCompactMoney(diff, currency)}</span>`;
+    }
+    return (
+      `<div class="kpi-delta" title="${fullCaption}">` +
+      `<span class="delta-caption"><span aria-hidden="true">${caption}</span><span class="sr-only">${fullCaption}:</span></span>` +
+      `<span class="delta delta-${tone}"><span aria-hidden="true">${arrow(diff)}</span> ${main}</span>${extra}</div>`
+    );
+  }
+
+  /**
+   * KPI-карточки.
+   * @param {object[]} kpis
+   * @param {string} currency
+   */
+  function renderKpis(kpis, currency) {
+    const th = cfg.DEVIATION_THRESHOLD;
+    $('kpi-row').innerHTML = kpis
+      .map((k) => {
+        const planPct = k.plan ? (k.value / k.plan) * 100 : 0;
+        const planTone = k.inverse
+          ? planPct > 100 + th ? 'bad' : planPct > 100 ? 'warn' : 'good'
+          : planPct >= 100 ? 'good' : planPct >= 100 - th ? 'warn' : 'bad';
+        const planWord = k.inverse ? 'бюджета' : 'плана';
+        const title = escapeHtml(k.title);
+        const shortTitle = escapeHtml(SHORT_TITLES[k.id] || k.title);
+        return (
+          `<article class="card kpi-card" data-kpi="${k.id}" aria-label="${title}">` +
+          `<div class="kpi-head"><h3 class="kpi-title" title="${title}">${shortTitle}</h3>${sparkline(k.sparkline)}</div>` +
+          `<div class="kpi-value">${kpiValue(k, currency)}</div>` +
+          deltaRow(k, k.prevDay, 'День', 'Изменение к предыдущему дню', currency) +
+          deltaRow(k, k.prevMonthSameDay, 'Месяц', 'Изменение к тому же дню прошлого месяца', currency) +
+          `<div class="kpi-plan">` +
+          `<div class="progress progress-${planTone}" role="progressbar" aria-label="Выполнение ${planWord}" ` +
+          `aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(clamp(planPct, 0, 100))}">` +
+          `<span class="progress-fill" data-width="${clamp(planPct, 0, 100).toFixed(1)}"></span></div>` +
+          `<span class="kpi-plan-label">${f.number(planPct, 0)}${f.NBSP}% ${planWord}</span>` +
+          `</div></article>`
+        );
+      })
+      .join('');
+    setBarWidths($('kpi-row'));
+  }
+
+  /** Ширина полос задаётся из JS, чтобы не использовать inline-стили в HTML */
+  function setBarWidths(root) {
+    requestAnimationFrame(() => {
+      root.querySelectorAll('.progress-fill[data-width]').forEach((el) => {
+        el.style.width = `${el.dataset.width}%`;
+      });
+    });
+  }
+
+  /**
+   * Сумма в центре кольца и легенда расходов.
+   * @param {Array<{category:string,amount:number}>} expenses
+   * @param {string} currency
+   */
+  function renderExpenses(expenses, currency) {
+    const total = expenses.reduce((acc, e) => acc + e.amount, 0);
+    const colors = D.charts.categoryColors(expenses.length);
+    $('expenses-total').textContent = f.compactMoney(total, currency);
+    const list = $('expenses-legend');
+    list.innerHTML = expenses
+      .map(
+        (e) =>
+          `<li class="legend-item"><span class="swatch" aria-hidden="true"></span>` +
+          `<span class="legend-name">${escapeHtml(e.category)}</span>` +
+          `<span class="legend-share">${f.percent((e.amount / total) * 100)}</span>` +
+          `<span class="legend-amount">${f.compactMoney(e.amount, currency)}</span></li>`
+      )
+      .join('');
+    list.querySelectorAll('.swatch').forEach((el, i) => {
+      el.style.background = colors[i];
+    });
+  }
+
+  function debtBlock(name, debt, currency) {
+    const share = debt.overdueShare * 100;
+    const tone = debt.overdueShare >= 0.2 ? 'bad' : debt.overdueShare >= cfg.OVERDUE_WARN_SHARE ? 'warn' : 'good';
+    const changeTone = toneOf(debt.change, true);
+    return (
+      `<div class="debt">` +
+      `<span class="debt-name">${name}</span>` +
+      `<span class="debt-total">${f.money(debt.total, currency)}</span>` +
+      `<span class="debt-change delta delta-${changeTone}"><span aria-hidden="true">${arrow(debt.change)}</span> ` +
+      `${f.signedCompactMoney(debt.change, currency)} <span class="delta-caption">за день</span></span>` +
+      `<div class="overdue">` +
+      `<span class="overdue-label"><span>Просрочено</span><strong>${f.percent(share)}</strong></span>` +
+      `<div class="progress progress-${tone}" role="progressbar" aria-label="Доля просроченной: ${name}" ` +
+      `aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(share)}">` +
+      `<span class="progress-fill" data-width="${clamp(share * 2.5, 0, 100).toFixed(1)}"></span></div>` +
+      `</div></div>`
+    );
+  }
+
+  /**
+   * Дебиторская и кредиторская задолженность. Шкала просрочки: 40 % = полная полоса.
+   * @param {{receivable:object,payable:object}} debts
+   * @param {string} currency
+   */
+  function renderDebts(debts, currency) {
+    const root = $('debts');
+    root.innerHTML = debtBlock('Дебиторская', debts.receivable, currency) + debtBlock('Кредиторская', debts.payable, currency);
+    setBarWidths(root);
+  }
+
+  /**
+   * Курсы валют, ключевая ставка, инфляция.
+   * @param {object} macro
+   */
+  function renderMacro(macro) {
+    const rows = macro.rates.map(
+      (r) =>
+        `<li class="macro-row">` +
+        `<span class="macro-label"><span class="macro-code">${r.code}</span><span class="macro-name">${escapeHtml(r.name)}</span></span>` +
+        `<span class="macro-value">${f.number(r.value, 2)}${f.NBSP}₽</span>` +
+        `<span class="macro-change delta delta-neutral"><span aria-hidden="true">${arrow(r.change)}</span> ${f.signedNumber(r.change, 2)}</span>` +
+        `</li>`
+    );
+    rows.push(
+      `<li class="macro-row"><span class="macro-label">Ключевая ставка</span>` +
+        `<span class="macro-value">${f.percent(macro.keyRate, 2)}</span>` +
+        `<span class="macro-change delta delta-neutral">${macro.keyRateChange ? f.signedNumber(macro.keyRateChange, 2) : 'без изм.'}</span></li>`,
+      `<li class="macro-row"><span class="macro-label">Инфляция, г/г <span class="macro-name">${f.monthName(macro.inflationPeriod)}</span></span>` +
+        `<span class="macro-value">${f.percent(macro.inflation, 1)}</span><span class="macro-change"></span></li>`
+    );
+    $('macro').innerHTML = rows.join('');
+  }
+
+  /**
+   * Топ-5 статей с наибольшим по модулю отклонением от плана.
+   * @param {object[]} planFact
+   * @param {string} currency
+   */
+  function renderDeviations(planFact, currency) {
+    const top = planFact
+      .map((it) => ({ ...it, dev: deviation(it) }))
+      .sort((a, b) => Math.abs(b.dev.pct) - Math.abs(a.dev.pct))
+      .slice(0, 5);
+    $('deviations-body').innerHTML = top
+      .map((it) => {
+        const directionTone = toneOf(it.fact - it.plan, it.type === 'expense');
+        const tone = it.dev.tone === 'neutral' ? 'neutral' : directionTone;
+        return (
+          `<tr><th scope="row">${escapeHtml(it.item)}</th>` +
+          `<td>${f.compactMoney(it.plan, currency)}</td>` +
+          `<td>${f.compactMoney(it.fact, currency)}</td>` +
+          `<td><span class="delta delta-${tone}">${f.signedPercent(it.dev.pct)}</span>` +
+          `<span class="dev-abs">${f.signedCompactMoney(it.fact - it.plan, currency)}</span></td></tr>`
+        );
+      })
+      .join('');
+  }
+
+  /**
+   * Лента предупреждений трёх уровней.
+   * @param {Array<{level:string,text:string}>} alerts
+   */
+  function renderAlerts(alerts) {
+    const actionable = alerts.filter((a) => a.level !== 'info').length;
+    const chip = $('alerts-count');
+    chip.textContent = String(actionable);
+    chip.title = `${actionable} ${f.plural(actionable, ['предупреждение', 'предупреждения', 'предупреждений'])}`;
+    chip.classList.toggle('has-critical', alerts.some((a) => a.level === 'critical'));
+    $('alerts').innerHTML = alerts
+      .map(
+        (a) =>
+          `<li class="alert alert-${a.level}"><span class="alert-badge">${LEVEL_LABELS[a.level]}</span>` +
+          `<span class="alert-text">${escapeHtml(a.text)}</span></li>`
+      )
+      .join('');
+  }
+
+  /**
+   * Перерисовывает все HTML-виджеты.
+   * @param {object} data ответ getDashboardData()
+   */
+  function renderAll(data) {
+    renderKpis(data.kpi, data.currency);
+    renderExpenses(data.expenses, data.currency);
+    renderDebts(data.debts, data.currency);
+    renderMacro(data.macro);
+    renderDeviations(data.planFact, data.currency);
+    renderAlerts(data.alerts);
+  }
+
+  D.components = { renderAll, deviation };
+})(window.Dashboard);
+</script>
+  <script>/* js/export.js */
+/**
+ * Экспорт: PDF — снимок дашборда (html2canvas + jsPDF), XLSX — данные дня на отдельных листах (SheetJS).
+ */
+(function (D) {
+  'use strict';
+
+  const round = (v, digits = 2) => Math.round(v * 10 ** digits) / 10 ** digits;
+  const pct = (value, base) => (base ? round(((value - base) / Math.abs(base)) * 100, 1) : null);
+
+  function fileName(data, ext) {
+    return `finance-dashboard_${data.date}_${data.currency}.${ext}`;
+  }
+
+  /**
+   * Сохраняет снимок дашборда в PDF (A4, альбомная ориентация).
+   * @param {object} data текущие данные дашборда
+   * @returns {Promise<void>}
+   */
+  async function toPdf(data) {
+    if (typeof window.html2canvas === 'undefined' || !window.jspdf) {
+      throw new Error('библиотеки html2canvas/jsPDF не загружены (нет подключения к интернету)');
+    }
+    const node = document.getElementById('app');
+    const background = getComputedStyle(document.documentElement).getPropertyValue('--bg-page').trim();
+    const canvas = await window.html2canvas(node, { scale: 2, backgroundColor: background, logging: false, useCORS: true });
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const margin = 6;
+    const ratio = Math.min((pageW - 2 * margin) / canvas.width, (pageH - 2 * margin) / canvas.height);
+    const w = canvas.width * ratio;
+    const h = canvas.height * ratio;
+    pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', (pageW - w) / 2, (pageH - h) / 2, w, h);
+    pdf.save(fileName(data, 'pdf'));
+  }
+
+  function sheet(rows) {
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const keys = Object.keys(rows[0] || {});
+    ws['!cols'] = keys.map((k) => ({ wch: Math.max(12, k.length + 2) }));
+    return ws;
+  }
+
+  /**
+   * Сохраняет данные текущего дня в XLSX: листы KPI, Динамика, План-факт, Расходы, Параметры.
+   * @param {object} data текущие данные дашборда
+   */
+  function toXlsx(data) {
+    if (typeof window.XLSX === 'undefined') {
+      throw new Error('библиотека SheetJS не загружена (нет подключения к интернету)');
+    }
+    const cur = data.currency;
+    const wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      sheet(
+        data.kpi.map((k) => ({
+          'Показатель': k.title,
+          'Единица': k.unit === 'percent' ? '%' : cur,
+          'Факт': round(k.value),
+          'План': round(k.plan),
+          'Выполнение плана, %': k.plan ? round((k.value / k.plan) * 100, 1) : null,
+          'Предыдущий день': round(k.prevDay),
+          'Изменение к пред. дню, %': pct(k.value, k.prevDay),
+          'Тот же день прошлого месяца': round(k.prevMonthSameDay),
+          'Изменение к прошлому месяцу, %': pct(k.value, k.prevMonthSameDay),
+        }))
+      ),
+      'KPI'
+    );
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      sheet(
+        data.trend.map((r) => ({
+          'Дата': r.date,
+          [`Выручка, ${cur}`]: round(r.revenue),
+          [`Чистая прибыль, ${cur}`]: round(r.profit),
+          [`План выручки, ${cur}`]: round(r.plan),
+        }))
+      ),
+      'Динамика'
+    );
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      sheet(
+        data.planFact.map((it) => ({
+          'Статья': it.item,
+          'Тип': it.type === 'expense' ? 'Расход' : 'Доход',
+          [`План, ${cur}`]: round(it.plan),
+          [`Факт, ${cur}`]: round(it.fact),
+          [`Отклонение, ${cur}`]: round(it.fact - it.plan),
+          'Отклонение, %': pct(it.fact, it.plan),
+        }))
+      ),
+      'План-факт'
+    );
+
+    const totalExpenses = data.expenses.reduce((acc, e) => acc + e.amount, 0);
+    XLSX.utils.book_append_sheet(
+      wb,
+      sheet(
+        data.expenses.map((e) => ({
+          'Категория': e.category,
+          [`Сумма, ${cur}`]: round(e.amount),
+          'Доля, %': round((e.amount / totalExpenses) * 100, 1),
+        }))
+      ),
+      'Расходы'
+    );
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      sheet([
+        { 'Параметр': 'Дата отчёта', 'Значение': data.date },
+        { 'Параметр': 'Валюта', 'Значение': cur },
+        { 'Параметр': 'Обновлено', 'Значение': new Date(data.updatedAt).toLocaleString('ru-RU') },
+        { 'Параметр': 'Источник', 'Значение': 'Демо-данные (моки)' },
+      ]),
+      'Параметры'
+    );
+
+    XLSX.writeFile(wb, fileName(data, 'xlsx'));
+  }
+
+  D.exporter = { toPdf, toXlsx };
+})(window.Dashboard);
+</script>
+  <script>/* js/app.js */
+/**
+ * Точка входа: состояние, обработчики событий, синхронизация с URL, автообновление.
+ */
+(function (D) {
+  'use strict';
+
+  const cfg = D.config;
+  const f = D.format;
+  const dates = D.dates;
+  const $ = (id) => document.getElementById(id);
+
+  const state = {
+    date: null,
+    currency: cfg.DEFAULT_CURRENCY,
+    period: cfg.DEFAULT_PERIOD,
+    data: null,
+  };
+  let requestSeq = 0;
+  let toastTimer = null;
+
+  // ---------- Даты ----------
+
+  function dateBounds() {
+    const today = dates.today();
+    return { min: dates.addDays(today, -cfg.HISTORY_DAYS), max: today };
+  }
+
+  function defaultDate() {
+    return dates.addDays(dates.today(), -1);
+  }
+
+  function normalizeDate(iso) {
+    if (!dates.isValidISO(iso)) return defaultDate();
+    const { min, max } = dateBounds();
+    if (iso < min) return min;
+    if (iso > max) return max;
+    return iso;
+  }
+
+  // ---------- URL ----------
+
+  function readUrlState() {
+    const search = new URLSearchParams(location.search);
+    const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+    const get = (key) => search.get(key) ?? hash.get(key);
+
+    const date = get('date');
+    const currency = (get('cur') || '').toUpperCase();
+    const period = Number(get('period'));
+
+    state.date = date ? normalizeDate(date) : defaultDate();
+    if (cfg.CURRENCIES.includes(currency)) state.currency = currency;
+    if (cfg.PERIODS.includes(period)) state.period = period;
+  }
+
+  function writeUrlState() {
+    const query = `date=${state.date}&cur=${state.currency}&period=${state.period}`;
+    try {
+      history.replaceState(null, '', `?${query}`);
+    } catch (err) {
+      // Некоторые браузеры запрещают менять адрес у страниц file:// — тогда используем #hash
+      try {
+        history.replaceState(null, '', `#${query}`);
+      } catch (err2) {
+        location.hash = query;
+      }
+    }
+  }
+
+  // ---------- Элементы управления ----------
+
+  function setSegmented(group, value) {
+    group.querySelectorAll('[role="radio"]').forEach((btn) => {
+      const checked = btn.dataset.value === String(value);
+      btn.setAttribute('aria-checked', String(checked));
+      btn.tabIndex = checked ? 0 : -1;
+    });
+  }
+
+  /** Радиогруппа из кнопок: клик и стрелки клавиатуры */
+  function bindSegmented(group, onSelect) {
+    const buttons = Array.from(group.querySelectorAll('[role="radio"]'));
+    group.addEventListener('click', (e) => {
+      const btn = e.target.closest('[role="radio"]');
+      if (btn) onSelect(btn.dataset.value);
+    });
+    group.addEventListener('keydown', (e) => {
+      const index = buttons.indexOf(document.activeElement);
+      if (index < 0) return;
+      let next;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (index + 1) % buttons.length;
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (index - 1 + buttons.length) % buttons.length;
+      else return;
+      e.preventDefault();
+      buttons[next].focus();
+      onSelect(buttons[next].dataset.value);
+    });
+  }
+
+  function syncControls() {
+    const input = $('date-input');
+    const { min, max } = dateBounds();
+    input.min = min;
+    input.max = max;
+    input.value = state.date;
+    setSegmented($('currency-switch'), state.currency);
+    setSegmented($('period-switch'), state.period);
+  }
+
+  function onDateChange(e) {
+    const value = e.target.value;
+    const next = value ? normalizeDate(value) : state.date;
+    e.target.value = next;
+    if (next === state.date) return;
+    state.date = next;
+    writeUrlState();
+    load();
+  }
+
+  function onCurrencyChange(value) {
+    if (value === state.currency) return;
+    state.currency = value;
+    setSegmented($('currency-switch'), value);
+    writeUrlState();
+    load();
+  }
+
+  function onPeriodChange(value) {
+    const period = Number(value);
+    if (period === state.period) return;
+    state.period = period;
+    setSegmented($('period-switch'), period);
+    writeUrlState();
+    if (state.data) D.charts.updateTrend(state.data.trend, state.period, state.data.currency);
+  }
+
+  // ---------- Меню экспорта ----------
+
+  function setMenuOpen(open) {
+    $('export-menu').hidden = !open;
+    $('export-btn').setAttribute('aria-expanded', String(open));
+    if (open) $('export-menu').querySelector('[role="menuitem"]').focus();
+  }
+
+  function bindExportMenu() {
+    const menu = $('export-menu');
+    const items = Array.from(menu.querySelectorAll('[role="menuitem"]'));
+
+    $('export-btn').addEventListener('click', () => setMenuOpen(menu.hidden));
+    document.addEventListener('click', (e) => {
+      if (!$('export-dropdown').contains(e.target)) setMenuOpen(false);
+    });
+    menu.addEventListener('keydown', (e) => {
+      const index = items.indexOf(document.activeElement);
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const step = e.key === 'ArrowDown' ? 1 : -1;
+        items[(index + step + items.length) % items.length].focus();
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !menu.hidden) {
+        setMenuOpen(false);
+        $('export-btn').focus();
+      }
+    });
+    menu.addEventListener('click', (e) => {
+      const item = e.target.closest('[data-export]');
+      if (!item) return;
+      setMenuOpen(false);
+      runExport(item.dataset.export);
+    });
+  }
+
+  async function runExport(type) {
+    if (!state.data) return;
+    const btn = $('export-btn');
+    btn.disabled = true;
+    try {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      if (type === 'pdf') await D.exporter.toPdf(state.data);
+      else D.exporter.toXlsx(state.data);
+    } catch (err) {
+      showToast(`Не удалось выполнить экспорт: ${err.message}`, false);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ---------- Состояния загрузки и ошибки ----------
+
+  function setLoading(on) {
+    document.body.classList.toggle('is-loading', on);
+    $('dashboard').setAttribute('aria-busy', String(on));
+  }
+
+  function showToast(message, withRetry) {
+    clearTimeout(toastTimer);
+    $('toast-text').textContent = message;
+    $('retry-btn').hidden = !withRetry;
+    $('toast').hidden = false;
+    if (!withRetry) toastTimer = setTimeout(hideToast, 6000);
+  }
+
+  function hideToast() {
+    clearTimeout(toastTimer);
+    $('toast').hidden = true;
+  }
+
+  /** Данные на экране соответствуют выбранным дате и валюте */
+  function isCurrent(data) {
+    return !!data && data.date === state.date && data.currency === state.currency;
+  }
+
+  // ---------- Загрузка и отрисовка ----------
+
+  function render() {
+    const data = state.data;
+    $('date-label').textContent = `${f.dateLong(data.date)} · данные в ${data.currency}`;
+    $('updated-at').textContent = `Обновлено: ${f.time(data.updatedAt)}`;
+    D.components.renderAll(data);
+    D.charts.updateAll(data, state);
+  }
+
+  /**
+   * Загружает данные за выбранную дату и валюту и перерисовывает дашборд.
+   * @param {{silent?: boolean}} [options] silent — фоновое обновление без скелетонов
+   */
+  async function load({ silent = false } = {}) {
+    const seq = ++requestSeq;
+    if (!silent || !isCurrent(state.data)) setLoading(true);
+    hideToast();
+    $('refresh-btn').classList.add('is-spinning');
+
+    try {
+      const data = await D.dataService.getDashboardData(state.date, state.currency);
+      if (seq !== requestSeq) return; // пришёл ответ на устаревший запрос
+      state.data = data;
+      render();
+      setLoading(false);
+    } catch (err) {
+      if (seq !== requestSeq) return;
+      if (isCurrent(state.data)) setLoading(false);
+      showToast(`Не удалось загрузить данные. ${err.message || ''}`.trim(), true);
+    } finally {
+      if (seq === requestSeq) $('refresh-btn').classList.remove('is-spinning');
+    }
+  }
+
+  // ---------- Инициализация ----------
+
+  function init() {
+    readUrlState();
+    syncControls();
+    writeUrlState();
+    D.charts.init();
+
+    $('date-input').addEventListener('change', onDateChange);
+    bindSegmented($('currency-switch'), onCurrencyChange);
+    bindSegmented($('period-switch'), onPeriodChange);
+    bindExportMenu();
+    $('refresh-btn').addEventListener('click', () => load({ silent: true }));
+    $('retry-btn').addEventListener('click', () => load());
+    $('toast-close').addEventListener('click', hideToast);
+
+    setInterval(() => {
+      if (!document.hidden) load({ silent: true });
+    }, cfg.REFRESH_INTERVAL_MS);
+
+    load();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})(window.Dashboard);
+</script>
+</body>
+</html>
